@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>P2P 채팅</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        #chat-window { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 1rem; margin-bottom: 1rem; }
+        #message-input { width: 70%; padding: 0.5rem; }
+        #send-button { width: 25%; padding: 0.5rem; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <script>
+        const myId = Math.random().toString(36).substring(2, 9);
+        let peerConnection;
+        let dataChannel;
+        let stompClient = null;
+
+        // DataChannel 이벤트 핸들러 설정
+        function setupDataChannel(channel) {
+            channel.onopen = () => {
+                document.getElementById('send-button').disabled = false;
+                displayMessage("연결이 성공적으로 열렸습니다! 채팅을 시작하세요.");
+            };
+            channel.onmessage = event => displayMessage("상대방: " + event.data);
+            channel.onclose = () => {
+                document.getElementById('send-button').disabled = true;
+                displayMessage("연결이 끊어졌습니다.");
+            };
+        }
+
+        // 웹소켓 연결
+        function connect() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, frame => {
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/signal', message => {
+                    const signal = JSON.parse(message.body);
+                    if (signal.fromId !== myId) handleSignal(signal);
+                });
+            });
+        }
+
+        // WebRTC 연결 시작
+        function startPeerConnection() {
+            if (peerConnection && peerConnection.iceConnectionState !== 'disconnected') {
+                console.log("이미 연결되어 있거나 연결 중입니다.");
+                return;
+            }
+
+            peerConnection = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            });
+
+            dataChannel = peerConnection.createDataChannel("chat");
+            setupDataChannel(dataChannel);
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    sendSignal({ 'ice': event.candidate });
+                }
+            };
+
+            peerConnection.createOffer()
+                .then(offer => peerConnection.setLocalDescription(offer))
+                .then(() => sendSignal({ 'offer': peerConnection.localDescription }));
+        }
+
+        // 시그널링 메시지 핸들링
+        function handleSignal(signal) {
+            if (!peerConnection) {
+                peerConnection = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                });
+
+                peerConnection.onicecandidate = event => {
+                    if (event.candidate) sendSignal({ 'ice': event.candidate });
+                };
+
+                peerConnection.ondatachannel = event => {
+                    dataChannel = event.channel;
+                    setupDataChannel(dataChannel);
+                };
+            }
+
+            if (signal.offer) {
+                peerConnection.setRemoteDescription(new RTCSessionDescription(signal.offer))
+                    .then(() => peerConnection.createAnswer())
+                    .then(answer => peerConnection.setLocalDescription(answer))
+                    .then(() => sendSignal({ 'answer': peerConnection.localDescription }));
+            } else if (signal.answer) {
+                peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+            } else if (signal.ice) {
+                peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice));
+            }
+        }
+
+        // 서버로 시그널 메시지 전송
+        function sendSignal(signal) {
+            if (stompClient && stompClient.connected) {
+                signal.fromId = myId;
+                stompClient.send("/app/signal", {}, JSON.stringify(signal));
+            } else {
+                console.error("웹소켓 연결이 아직 준비되지 않았습니다. 시그널을 보낼 수 없습니다.");
+            }
+        }
+
+        // 메시지 전송
+        function sendMessage() {
+            const message = document.getElementById('message-input').value;
+            if (dataChannel && dataChannel.readyState === "open") {
+                dataChannel.send(message);
+                displayMessage("나: " + message);
+                document.getElementById('message-input').value = "";
+            } else {
+                displayMessage("오류: 연결이 열리지 않았습니다.");
+            }
+        }
+
+        // 메시지 화면에 표시
+        function displayMessage(text) {
+            const chatWindow = document.getElementById('chat-window');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = text;
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        window.onload = connect;
+    </script>
+</head>
+<body>
+
+<h1>P2P 채팅</h1>
+<button onclick="startPeerConnection()">채팅 시작하기</button>
+<p>채팅 시작 버튼을 누른 후, 다른 사용자가 접속하면 P2P 연결이 시작됩니다.</p>
+
+<div id="chat-window"></div>
+
+<div class="message-form">
+    <input type="text" id="message-input" placeholder="메시지를 입력하세요">
+    <button id="send-button" onclick="sendMessage()" disabled>보내기</button>
+</div>
+
+</body>
+</html>
