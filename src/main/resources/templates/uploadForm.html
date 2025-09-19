@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>파일 업로드 및 다운로드 서버</title>
+</head>
+<body>
+<h1>파일 업로드</h1>
+
+<form method="POST" action="/upload" enctype="multipart/form-data">
+    <input type="file" name="file" required="required" />
+    <br><br>
+    <button type="submit">업로드 시작</button>
+</form>
+
+<p style="font-weight: bold; color: red;" th:if="${message}" th:text="${message}"></p>
+
+<hr>
+
+<h2>업로드된 파일 목록</h2>
+<div th:if="${files != null and not #lists.isEmpty(files)}">
+    <ul>
+        <li th:each="file : ${files}">
+            <a th:href="@{'/download/' + ${file}}" th:text="${file}">파일 이름</a>
+        </li>
+    </ul>
+</div>
+<div th:unless="${files != null and not #lists.isEmpty(files)}">
+    <p>현재 업로드된 파일이 없습니다.</p>
+</div>
+</body>
+</html>
