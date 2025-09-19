@@ -34,6 +34,11 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    //MySQL 드라이버
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    runtimeOnly("com.mysql:mysql-connector-j")
+
+
     // 💥 Retrofit 의존성 삭제됨 💥
 }
 

@@ -25,8 +25,7 @@ public class MemberService {
         // DB 조회 및 DTO 변환 과정 생략 후 Mock DTO 반환
         return new MemberDTO(
                 1L,
-                "ToastLover",
-                "toast@example.com"
+                "ToastLover"
         );
     }
     

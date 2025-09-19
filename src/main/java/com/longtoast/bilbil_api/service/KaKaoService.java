@@ -1,7 +1,11 @@
 package com.longtoast.bilbil_api.service;
 
+import com.longtoast.bilbil_api.domain.SocialLogin;
+import com.longtoast.bilbil_api.domain.User;
 import com.longtoast.bilbil_api.dto.KakaoDTO;
 import com.longtoast.bilbil_api.dto.MemberTokenResponse;
+import com.longtoast.bilbil_api.repository.SocialLoginRepository;
+import com.longtoast.bilbil_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,7 +25,8 @@ public class KaKaoService {
 
     // WebClient.Builder 주입 (Application class에 Bean 등록 필요)
     private final WebClient.Builder webClientBuilder;
-
+    private final UserRepository userRepository;
+    private final SocialLoginRepository socialLoginRepository; // social_id 관리
     // application.properties의 kakao.rest-api-key 값을 주입받음
     @Value("${kakao.rest-api-key}")
     private String kakaoRestApiKey;
@@ -40,23 +45,50 @@ public class KaKaoService {
 
         // 🚨 사용자 정보를 서버 로그 창에 출력합니다. 🚨
         log.info("--- 카카오 로그인 사용자 정보 ---");
-        log.info("카카오 ID: {}", kakaoInfo.getId());
-        log.info("닉네임: {}", kakaoInfo.getNickname());
-        log.info("이메일: {}", kakaoInfo.getEmail());
+        log.info("카카오 로그인 사용자 정보: ID={}, 닉네임={}", kakaoInfo.getId(), kakaoInfo.getNickname());
         log.info("-----------------------------");
 
         // 2. 우리 서비스 회원 DB 처리:
         // 🚨 TODO: kakaoInfo.getId()를 사용하여 DB에서 회원 조회 및 저장/업데이트 로직 구현
 
+        // --- DB 처리 시작 ---
+        // social_id = "kakao_123456" 형식으로 저장
+        String socialId = "kakao_" + kakaoInfo.getId();
+
+        // 이미 가입한 사용자 조회
+        SocialLogin socialLogin = socialLoginRepository
+                .findBySocialId(socialId)
+                .orElse(null);
+
+        User user;
+        if (socialLogin != null) {
+            user = socialLogin.getUser(); // 이미 존재하면 해당 User 가져오기
+        } else {
+            // 신규 회원 생성
+            user = User.builder()
+                    .nickname(kakaoInfo.getNickname())
+                    .build();
+            user = userRepository.save(user);
+
+            // SocialLogin 기록 생성
+            socialLoginRepository.save(SocialLogin.builder()
+                    .user(user)
+                    .provider("kakao")
+                    .socialId(socialId)
+                    .accessToken(kakaoAccessToken)
+                    .build());
+        }
+        // --- DB 처리 끝 ---
+
         // 3. 우리 서비스 인증 토큰 발행: (Mock)
         // 🚨 TODO: Spring Security와 JWT를 사용하여 서비스 전용 토큰을 생성해야 합니다.
-        String serviceToken = "OUR_SERVICE_JWT_TOKEN_FOR_" + kakaoInfo.getId();
+        String serviceToken = "OUR_SERVICE_JWT_TOKEN_FOR_" + user.getId();
 
         // 4. 결과 반환
         return new MemberTokenResponse(
                 serviceToken,
-                kakaoInfo.getNickname(),
-                kakaoInfo.getEmail()
+                user.getNickname()
+
         );
     }
 

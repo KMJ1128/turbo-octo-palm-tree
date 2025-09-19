@@ -10,6 +10,6 @@ public class MemberDTO {
 
     private Long id;
     private String nickname;
-    private String email;
+    //private String email;
     // 필요한 다른 필드들 추가
 }

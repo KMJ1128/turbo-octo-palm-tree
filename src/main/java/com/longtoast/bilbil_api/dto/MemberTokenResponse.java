@@ -11,5 +11,5 @@ public class MemberTokenResponse {
 
     // 로그인된 회원의 기본 정보
     private String nickname;
-    private String email;
+    //private String email;
 }

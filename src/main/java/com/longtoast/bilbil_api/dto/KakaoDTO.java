@@ -5,12 +5,30 @@ import lombok.Data;
 @Data // Lombok: Getter, Setter, toString 등을 자동 생성
 public class KakaoDTO {
 
-    // 카카오 고유 ID
     private long id;
+    private KakaoAccount kakao_account;
 
-    // 이메일 (선택 동의 항목)
-    private String email;
+    @Data
+    public static class KakaoAccount {
+       // private String email;
+        private Profile profile;
 
-    // 닉네임
-    private String nickname;
+        @Data
+        public static class Profile {
+            private String nickname;
+            private String profile_image_url;
+            private String thumbnail_image_url;
+        }
+    }
+
+    // 편하게 nickname/email 꺼낼 수 있도록 helper 메서드 추가
+    public String getNickname() {
+        return kakao_account != null && kakao_account.getProfile() != null
+                ? kakao_account.getProfile().getNickname()
+                : null;
+    }
+
+    /*public String getEmail() {
+        return kakao_account != null ? kakao_account.getEmail() : null;
+    }*/
 }
