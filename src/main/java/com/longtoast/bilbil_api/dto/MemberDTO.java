@@ -1,8 +1,7 @@
 package com.longtoast.bilbil_api.dto;
 import lombok.*;
 
-@Data
-@NoArgsConstructor
+
 @Getter
 @Setter
 @AllArgsConstructor

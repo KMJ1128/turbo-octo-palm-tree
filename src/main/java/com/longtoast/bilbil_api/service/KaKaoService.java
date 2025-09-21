@@ -81,7 +81,7 @@ public class KaKaoService {
         // --- DB 처리 끝 ---
 
         // 3. 우리 서비스 인증 토큰 발행: (Mock)
-        // 🚨 TODO: Spring Security와 JWT를 사용하여 서비스 전용 토큰을 생성해야 합니다.
+        //  TODO: Spring Security와 JWT를 사용하여 서비스 전용 토큰을 생성해야 함
         String serviceToken = "OUR_SERVICE_JWT_TOKEN_FOR_" + user.getId();
 
         // 4. 결과 반환
@@ -93,8 +93,8 @@ public class KaKaoService {
     }
 
     /**
-     * [내부 Helper 함수] 카카오 Access Token으로 사용자 정보를 조회합니다.
-     * WebClient를 사용하여 카카오 서버와 HTTP 통신을 수행합니다.
+     * [내부 Helper 함수] 카카오 Access Token으로 사용자 정보를 조회
+     * WebClient를 사용하여 카카오 서버와 HTTP 통신을 수행
      */
     private KakaoDTO getUserInfoFromKakao(String kakaoAccessToken) throws Exception {
 
