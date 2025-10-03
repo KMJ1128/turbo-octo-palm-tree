@@ -38,8 +38,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    // 💡 필수 추가: Spring Security 의존성
+    implementation ("org.springframework.boot:spring-boot-starter-security")
 
-    // 💥 Retrofit 의존성 삭제됨 💥
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 }
 
 tasks.withType<Test> {

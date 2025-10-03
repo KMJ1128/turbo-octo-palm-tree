@@ -16,7 +16,7 @@ public class MemberService {
      * 실제 구현 시에는 인증 정보(토큰 등)를 사용하여 데이터베이스에서 회원을 조회해야 합니다.
      * @return 조회된 회원 정보
      */
-    public MemberDTO getCurrentMemberInfo() {
+    public MemberDTO getCurrentMemberInfo(MemberDTO dto) {
         // 🚨 TODO: 실제로는 인증 정보를 분석하여 DB에서 해당 ID의 회원 정보를 조회해야 합니다.
         // 현재는 예시 Mock 데이터를 반환합니다.
 
@@ -24,11 +24,14 @@ public class MemberService {
 
         // DB 조회 및 DTO 변환 과정 생략 후 Mock DTO 반환
         return new MemberDTO(
-                1L,
-                "ToastLover"
+                dto.getId(),
+                dto.getNickname(),
+                dto.getAddress(),
+                dto.getLocationLatitude(),
+                dto.getLocationLongitude()
         );
     }
-    
+
     /* // 추가적인 서비스 메서드 예시
     // public void updateMember(MemberDTO dto) { ... }
     */

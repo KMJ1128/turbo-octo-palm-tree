@@ -7,7 +7,15 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User,Integer> {
+
     Optional<User> findByNickname(String nickname);
     Optional<User> findByEmail(String email);
+    Optional<User> findByProfileImageUrl(String profileImageUrl);
+    Optional<User> findByCreditScore(Integer creditScore);
+    Optional<User> findByAddress(String address);
+
+
+    Optional<User> findByLocationLatitude(double location_latitude);
+    Optional<User> findByLocationLongitude(double location_longitude);
 }

@@ -15,10 +15,11 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 자동 증가 ID
+    private Integer id; // 자동 증가 ID
 
     @Column(unique = true, nullable = false)
     private String nickname; // 닉네임, 로그인에 사용
+
 
     private String email; // optional, 소셜 로그인시 이메일이 있으면 저장
 
@@ -26,6 +27,14 @@ public class User {
 
     private Integer creditScore = 720; // 기본 신용점수
 
+    private String address;
+    private Double locationLatitude;
+    private Double locationLongitude;
+
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<SocialLogin> socialLogins; // 여러 소셜 계정 연결 가능
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Item> items;
 }
